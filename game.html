@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>Detalhes do Jogo</title>
+  <link rel="stylesheet" href="css/styles.css" />
+
+</head>
+<body>
+  <div class="container-game">
+    <img id="game-image" class="game-image" src="" alt="Imagem do jogo" />
+    <div class="details" id="game-detail">Carregando detalhes...</div>
+  </div>
+
+  <a href="index.html" class="btn btn-warning ms-2 mt-4">Voltar</a>
+
+  <script>
+    function getIdFromUrl() {
+      const params = new URLSearchParams(window.location.search);
+      return params.get('id');
+    }
+    async function loadGame() {
+      const id = getIdFromUrl();
+      if (!id) {
+        document.getElementById('game-detail').textContent = "ID do jogo não informado na URL.";
+        return;
+      }
+      try {
+        //altera aqui o endereco do servidor pelo da AWS
+        const response = await fetch(`http://localhost:8080/API-Games/api.php/games/${id}`);
+        if (!response.ok) throw new Error("Erro ao buscar dados do jogo");
+        const jogo = await response.json();
+        if (!jogo || !jogo.nome) {
+          document.getElementById('game-detail').textContent = "Jogo não encontrado.";
+          return;
+        }
+        const imgSrc = jogo.imagem ? `img/${jogo.imagem}` : "https://via.placeholder.com/500x580?text=Sem+Imagem";
+        const imgEl = document.getElementById('game-image');
+        imgEl.src = imgSrc;
+        imgEl.alt = jogo.nome;
+        const details = document.getElementById('game-detail');
+        details.innerHTML = `
+          <h1>${jogo.nome}</h1>
+          <p><strong>Categoria:</strong> ${jogo.categoria}</p>
+          <p><strong>Estúdio:</strong> ${jogo.estudio}</p>
+          <p><strong>Faixa Etária:</strong> ${jogo.idade}</p>
+          <p><strong>Preço:</strong> R$ ${Number(jogo.valor).toFixed(2).replace('.', ',')}</p>
+          <p><strong>Disponibilidade:</strong> ${jogo.disponibilidade ? 'Disponível' : 'Indisponível'}</p>
+        `;
+      } catch (e) {
+        document.getElementById('game-detail').textContent = "Erro ao carregar detalhes do jogo.";
+        console.error(e);
+      }
+    }
+    loadGame();
+  </script>
+</body>
+</html>
